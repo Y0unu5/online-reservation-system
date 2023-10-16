@@ -1,0 +1,60 @@
+server:
+  port: 7005
+spring:
+  application:
+    name: TRAIN-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: TICKET-SERVICE
+          uri: lb://TICKET-SERVICE
+          predicates:
+            - Path=/tickets/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: TICKET-SERVICE
+                fallbackuri: forward:/ticketServiceFallBack
+        - id: TRAIN-SERVICE
+          uri: lb://TRAIN-SERVICE
+          predicates:
+            - Path=/trains/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: TRAIN-SERVICE
+                fallbackuri: forward:/trainServiceFallBack
+        - id: PAYMENT-SERVICE
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PAYMENT-SERVICE
+                fallbackuri: forward:/paymentServiceFallBack
+        - id: ADMIN-SERVICE
+          uri: lb://ADMIN-SERVICE
+          predicates:
+            - Path=/admins/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: ADMIN-SERVICE
+                fallbackuri: forward:/adminServiceFallBack
+
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka}
+
+resilience4j.timelimiter:
+  configs:
+    default:
+      timeoutDuration: 4s
+      cancelRunningFuture: true
